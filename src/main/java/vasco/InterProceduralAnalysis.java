@@ -164,6 +164,9 @@ public abstract class InterProceduralAnalysis<M,N,A> {
 	 */
 	public abstract void doAnalysis();
 
+	public void redoAnalysis(Context<M,N,A> c){
+		;
+	}
 
 	/**
 	 * Returns the callers of a value context.
@@ -246,6 +249,7 @@ public abstract class InterProceduralAnalysis<M,N,A> {
 		Map<N,A> outValues = new HashMap<N,A>();
 		// Merge over all contexts
 		for (M method : contexts.keySet()) {
+			System.out.println("Meeting over valid paths: "+method);
 			for (N node : programRepresentation().getControlFlowGraph(method)) {
 				A in = topValue();
 				A out = topValue();
@@ -256,6 +260,7 @@ public abstract class InterProceduralAnalysis<M,N,A> {
 				inValues.put(node, in);
 				outValues.put(node, out);
 			}
+			System.out.println("Done meeting: "+method);
 		}
 		// Return data flow solution
 		return new DataFlowSolution<N,A>(inValues, outValues);

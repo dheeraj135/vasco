@@ -23,7 +23,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
+import java.util.PriorityQueue;
 import java.util.TreeSet;
+import java.util.Date;
 
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
@@ -64,8 +66,18 @@ public class Context<M,N,A> implements soot.Context, Comparable<Context<M,N,A>> 
 	/** A counter for global context identifiers. */
 	private static int count = 0;
 
+	static int numFreed = 0;
 	/** Debug stuff */
 	static java.util.Set<Object> freeContexts = new java.util.HashSet<Object>();
+	static Comparator<Context> contextComparator = new Comparator<Context>() {
+		
+		@Override
+		public int compare(Context c1, Context c2) {
+			return c1.getWorklistCount() - c2.getWorklistCount();
+		}
+	};
+
+	static PriorityQueue<Context> contextList = new PriorityQueue<>(contextComparator);
 	static int totalNodes = 0;
 	static int liveNodes = 0;
 
@@ -100,6 +112,18 @@ public class Context<M,N,A> implements soot.Context, Comparable<Context<M,N,A>> 
 	private NavigableSet<N> workList;
 
 	private LinkedList<Pair<N, N>> workListOfEdges;
+
+	private int workListCount;
+
+	private InterProceduralAnalysis<M,N,A> analysis;
+
+	int reAnalysisCount;
+
+	private boolean currentlyReAnalysed = false;
+
+	Date latestHit;
+
+	Integer hitCount;
 	/**
 	 * Creates a new context for phantom method
 	 * 
@@ -114,6 +138,9 @@ public class Context<M,N,A> implements soot.Context, Comparable<Context<M,N,A>> 
 		this.analysed = false;
 		this.workList = new TreeSet<N>();
 		this.workListOfEdges = new LinkedList<Pair<N, N>>();
+		this.workListCount = 0;
+		this.latestHit = new Date();
+		this.hitCount = 0;
 	}
 
 	/**
@@ -138,6 +165,10 @@ public class Context<M,N,A> implements soot.Context, Comparable<Context<M,N,A>> 
 		this.inValues = new HashMap<N,A>();
 		this.outValues = new HashMap<N,A>();
 		this.analysed = false;
+		this.workListCount = 0;
+		this.latestHit = new Date();
+		this.hitCount = 0;
+		contextList.add(this);
 		
 		totalNodes = totalNodes + controlFlowGraph.size();
 		liveNodes = liveNodes + controlFlowGraph.size();
@@ -166,6 +197,22 @@ public class Context<M,N,A> implements soot.Context, Comparable<Context<M,N,A>> 
 		this.workListOfEdges = new LinkedList<Pair<N, N>>();
 	}
 
+	public int getWorklistCount() {
+		return this.workListCount;
+	}
+
+	public void setWorklistCount(int val) {
+		this.workListCount = val;
+	}
+
+	public void setAnalysis(InterProceduralAnalysis<M,N,A> analysis) {
+		this.analysis = analysis;
+	}
+
+	public boolean isBeingReAnalysed() {
+		return this.currentlyReAnalysed;
+	}
+
 	/**
 	 * Compares two contexts by their globally unique IDs.
 	 * 
@@ -189,6 +236,14 @@ public class Context<M,N,A> implements soot.Context, Comparable<Context<M,N,A>> 
 		controlFlowGraph = null;
 		workList = null;
 		freeContexts.add(this);
+	}
+
+	public void freeContext() {
+		inValues = null;
+		outValues = null;
+		analysed = false;
+		numFreed++;
+		System.out.println("[FREE] X"+this.method+" ("+this.entryValue+")");
 	}
 
 	/** 
@@ -258,6 +313,10 @@ public class Context<M,N,A> implements soot.Context, Comparable<Context<M,N,A>> 
 	 * @return the data flow value at the exit of the given node
 	 */
 	public A getValueAfter(N node) {
+		if (this.isFreed())
+			this.reconstructFreed();
+		this.latestHit = new Date();
+		this.hitCount ++;
 		return outValues.get(node);
 	}
 
@@ -268,9 +327,35 @@ public class Context<M,N,A> implements soot.Context, Comparable<Context<M,N,A>> 
 	 * @return the data flow value at the entry of the given node
 	 */
 	public A getValueBefore(N node) {
+		// System.out.println("[BEFORE] inValues: "+inValues+" outValues: "+outValues);
+		if (this.isFreed()) {
+			this.reconstructFreed();
+		}
+		this.latestHit = new Date();
+		this.hitCount ++;
+		// System.out.println("[INVAL] "+ this.method+" "+this.entryValue+" Node: "+node);
+		// System.out.println("[AFTER] inValues: "+inValues+" outValues: "+outValues);
 		return inValues.get(node);
 	}
 
+	public void reconstructFreed() {
+		System.out.println("[REDO] X"+this.method+" ("+this.entryValue+")");
+		this.reAnalysisCount++;
+		numFreed--;
+		this.currentlyReAnalysed = true;
+		this.inValues = new HashMap<N, A>();	
+		this.outValues = new HashMap<N, A>();
+		this.analysis.redoAnalysis(this);
+		this.currentlyReAnalysed = false;
+	}
+
+	public void removedFromWorklist() {
+		this.workListCount--;
+	}
+
+	public void addedToWorklist() {
+		this.workListCount++;
+	}
 	/**
 	 * Returns a reference to this context's work-list.
 	 * 

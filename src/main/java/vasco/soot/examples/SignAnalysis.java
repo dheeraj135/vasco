@@ -134,6 +134,7 @@ public class SignAnalysis extends ForwardInterProceduralAnalysis<SootMethod, Uni
 	// Private utility method to assign the constant value of the RHS (if any) from the input map to  the LHS in the output map.
 	private void assign(Local lhs, Value rhs, Map<Local, SignAnalysis.Sign> input, Map<Local, SignAnalysis.Sign> output) {
 		// We only care about numeric locals
+		// System.out.println("LHS: "+lhs.getType());
 		if (lhs.getType() instanceof IntType) {			
 			// First remove casts, if any.
 			if (rhs instanceof CastExpr) {
@@ -141,6 +142,7 @@ public class SignAnalysis extends ForwardInterProceduralAnalysis<SootMethod, Uni
 			}	
 			// Determine the sign of the RHS and add it to the map
 			Sign sign = signOf(rhs, input);
+			// System.out.println("lhs: "+lhs+" rhs:"+rhs+":::"+sign);
 			output.put(lhs, sign);
 		}
 	}
@@ -156,7 +158,9 @@ public class SignAnalysis extends ForwardInterProceduralAnalysis<SootMethod, Uni
 			// Get operands
 			Value lhsOp = ((AssignStmt) unit).getLeftOp();
 			Value rhsOp = ((AssignStmt) unit).getRightOp();
+			// System.out.println("Assign: "+unit+"::"+lhsOp.getClass());
 			if (lhsOp instanceof Local) {
+				// System.out.println("Assign: "+unit+"::"+lhsOp.getClass());
 				assign((Local) lhsOp, rhsOp, inValue, outValue);		
 			}
 		} else if (unit instanceof ReturnStmt) {
