@@ -46,7 +46,9 @@ public class Cache {
     static double freePer = 0.4;
     static double freePerForce = 0.7;
 
+    static int count = 0; 
     public static void freeUp() {
+        if ((count++) % 3 != 0) return;
         if (cacheType == 0)
             LRUCache.freeUp(false);
         else
