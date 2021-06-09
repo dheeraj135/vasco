@@ -261,6 +261,7 @@ public abstract class InterProceduralAnalysis<M,N,A> {
 				outValues.put(node, out);
 			}
 			System.out.println("Done meeting: "+method);
+			Cache.freeUp(true);
 		}
 		// Return data flow solution
 		return new DataFlowSolution<N,A>(inValues, outValues);

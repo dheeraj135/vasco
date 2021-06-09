@@ -130,14 +130,12 @@ public abstract class ForwardInterProceduralAnalysis<M,N,A> extends InterProcedu
 								System.out.println("[NEW] X" + currentContext + " -> X" + targetContext + " " + targetMethod + " ");
 								System.out.println("ENTRY(X" + targetContext + ") = " + entryValue);
 							}
-
 						}
-
 						// Store the transition from the calling context and site to the called context.
 						contextTransitions.addTransition(callSite, targetContext);
 
 						// Check if the target context has been analysed (surely not if it is just newly made):
-						if (targetContext.isAnalysed()) {
+						if (targetContext.isAnalysed() || targetContext.isFreed()) {
 							hit = true;
 								A exitValue = targetContext.getExitValue();
 							if (verbose) {
@@ -222,25 +220,6 @@ public abstract class ForwardInterProceduralAnalysis<M,N,A> extends InterProcedu
 					}
 				}
 				
-				// Free memory on-the-fly if not needed
-				// if (freeResultsOnTheFly) {
-				// 	Set<Context<M,N,A>> reachableContexts = contextTransitions.reachableSet(currentContext, true);
-				// 	// If any reachable contexts exist on the work-list, then we cannot free memory
-				// 	boolean canFree = true;
-				// 	for (Context<M,N,A> reachableContext : reachableContexts) {
-				// 		if (worklist.contains(reachableContext)) {
-				// 			canFree = false;
-				// 			break;
-				// 		}
-				// 	}
-				// 	// If no reachable contexts on the stack, then free memory associated
-				// 	// with this context
-				// 	if (canFree) {
-				// 		for (Context<M,N,A> reachableContext : reachableContexts) {
-				// 			reachableContext.freeMemory();
-				// 		}
-				// 	}
-				// }					
 			}
 			
 		}
@@ -328,14 +307,13 @@ public abstract class ForwardInterProceduralAnalysis<M,N,A> extends InterProcedu
 								System.out.println("[NEW] X" + currentContext + " -> X" + targetContext + " " + targetMethod + " ");
 								System.out.println("ENTRY(X" + targetContext + ") = " + entryValue);
 							}
-
 						}
 
 						// Store the transition from the calling context and site to the called context.
 						contextTransitions.addTransition(callSite, targetContext);
 
 						// Check if the target context has been analysed (surely not if it is just newly made):
-						if (targetContext.isAnalysed()) {
+						if (targetContext.isAnalysed() || targetContext.isFreed()) {
 							hit = true;
 								A exitValue = targetContext.getExitValue();
 							if (verbose) {

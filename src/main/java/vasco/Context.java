@@ -17,6 +17,7 @@
  */
 package vasco;
 
+import java.math.BigInteger;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -121,7 +122,9 @@ public class Context<M,N,A> implements soot.Context, Comparable<Context<M,N,A>> 
 
 	private boolean currentlyReAnalysed = false;
 
-	Date latestHit;
+	Integer latestHit;
+
+	static Integer univ = 0;
 
 	Integer hitCount;
 	/**
@@ -139,7 +142,7 @@ public class Context<M,N,A> implements soot.Context, Comparable<Context<M,N,A>> 
 		this.workList = new TreeSet<N>();
 		this.workListOfEdges = new LinkedList<Pair<N, N>>();
 		this.workListCount = 0;
-		this.latestHit = new Date();
+		this.latestHit = 0;
 		this.hitCount = 0;
 	}
 
@@ -166,7 +169,7 @@ public class Context<M,N,A> implements soot.Context, Comparable<Context<M,N,A>> 
 		this.outValues = new HashMap<N,A>();
 		this.analysed = false;
 		this.workListCount = 0;
-		this.latestHit = new Date();
+		this.latestHit = 0;
 		this.hitCount = 0;
 		contextList.add(this);
 		
@@ -315,7 +318,7 @@ public class Context<M,N,A> implements soot.Context, Comparable<Context<M,N,A>> 
 	public A getValueAfter(N node) {
 		if (this.isFreed())
 			this.reconstructFreed();
-		this.latestHit = new Date();
+		this.latestHit = univ++;
 		this.hitCount ++;
 		return outValues.get(node);
 	}
@@ -331,11 +334,13 @@ public class Context<M,N,A> implements soot.Context, Comparable<Context<M,N,A>> 
 		if (this.isFreed()) {
 			this.reconstructFreed();
 		}
-		this.latestHit = new Date();
+		this.latestHit = univ++;
 		this.hitCount ++;
 		// System.out.println("[INVAL] "+ this.method+" "+this.entryValue+" Node: "+node);
 		// System.out.println("[AFTER] inValues: "+inValues+" outValues: "+outValues);
-		return inValues.get(node);
+		A ret = inValues.get(node);
+		Cache.freeUp();
+		return ret;
 	}
 
 	public void reconstructFreed() {
@@ -420,6 +425,11 @@ public class Context<M,N,A> implements soot.Context, Comparable<Context<M,N,A>> 
 	 * @param value the new data flow at the node exit
 	 */
 	public void setValueAfter(N node, A value) {
+		// System.out.println(outValues+" "+node+" "+value);
+		if (this.isFreed())
+			this.reconstructFreed();
+		this.latestHit = univ++;
+		this.hitCount ++;
 		outValues.put(node, value);
 	}
 	/** 
@@ -429,6 +439,10 @@ public class Context<M,N,A> implements soot.Context, Comparable<Context<M,N,A>> 
 	 * @param value the new data flow at the node entry
 	 */
 	public void setValueBefore(N node, A value) {
+		if (this.isFreed())
+			this.reconstructFreed();
+		this.latestHit = univ++;
+		this.hitCount ++;
 		inValues.put(node, value);
 	}
 	
