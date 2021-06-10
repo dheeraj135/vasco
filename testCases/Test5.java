@@ -15,12 +15,12 @@ public class Test5 {
     }
 
     static void performTask3() {
-        Node nd = new Node();
+        Oper nd = new Oper();
         int z = nd.second(10);
     }
 }
 
-class Node {
+class Oper {
     public int op(int a, int b) {
         if (a<b)
             return a*b;

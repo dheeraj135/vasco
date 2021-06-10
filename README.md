@@ -11,6 +11,18 @@ You can use these classes directly with any program analysis toolkit or intermed
 
 There is a JavaDoc generated [API documentation](http://rohanpadhye.github.io/vasco/apidocs) available for the framework classes. To develop a custom data-flow analysis, you need to extend either of the [`ForwardInterProceduralAnalysis`](https://rohanpadhye.github.io/vasco/apidocs/vasco/ForwardInterProceduralAnalysis.html) or [`BackwardInterProceduralAnalysis`](https://rohanpadhye.github.io/vasco/apidocs/vasco/BackwardInterProceduralAnalysis.html) classes. 
 
+## Simple steps to get started ##
+
+Install without running the tests:
+```
+mvn install -DskipTests
+```
+
+Run a sign analysis test case and capture time and memory consumption:
+```
+/usr/bin/time -v mvn exec:java -Dexec.mainClass="vasco.soot.examples.SignTest" -Dexec.args="-cp testCases/ TestX" > log.txt 2>&1
+```
+
 ## Building with Maven ##
 
 **Note**: Soot may not work with Java 9+, due to the absence of rt.jar in the new JDK. Until Soot's Java 9 support is released into the main stream, VASCO is also restricted to Java 8. If your default Java version is newer than Java 8, then set the `JAVA_HOME` environment variable to a Java 8 installation before continuing.

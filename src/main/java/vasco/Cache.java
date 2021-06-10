@@ -39,7 +39,7 @@ class LFUCache extends Cache {
 
 public class Cache {
 
-    static int cacheType = 0;
+    static int cacheType = 1;
     static int X = 5;
     static int XForce = 10;
 
